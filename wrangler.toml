@@ -1,0 +1,8 @@
+name = "renes-outdoor-maintenance"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "renes-outdoor-db"
+database_id = "c773fdc5-8e6d-4321-a23c-1ab4cf10c8f0"
