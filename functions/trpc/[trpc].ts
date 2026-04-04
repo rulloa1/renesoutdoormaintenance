@@ -10,7 +10,8 @@ interface Env {
 
 export const onRequest: PagesFunction<Env> = async (ctx) => {
   if (!ctx.env.JWT_SECRET) {
-    return new Response("Server misconfiguration: JWT_SECRET is not set.", { status: 500 });
+    console.error("JWT_SECRET environment variable not set.");
+    return new Response("Internal Server Error: JWT_SECRET not configured.", { status: 500 });
   }
 
   const responseHeaders = new Headers();
@@ -24,7 +25,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     ?.slice("renes-session=".length);
 
   let user: Session | null = null;
-  if (token && ctx.env.JWT_SECRET) {
+  if (token) {
     user = await verifyJWT<Session>(token, ctx.env.JWT_SECRET);
   }
 
