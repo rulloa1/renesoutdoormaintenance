@@ -8,6 +8,17 @@ export function createDb(d1: D1Database) {
 
 export type Db = ReturnType<typeof createDb>;
 
+// ─── Base64URL helpers (JWT spec requires URL-safe base64 with no padding) ────
+
+function toBase64Url(base64: string): string {
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+function fromBase64Url(base64url: string): string {
+  const padded = base64url + "==".slice(0, (4 - (base64url.length % 4)) % 4);
+  return padded.replace(/-/g, "+").replace(/_/g, "/");
+}
+
 // ─── Password hashing via Web Crypto PBKDF2 ──────────────────────────────────
 
 export async function hashPassword(password: string): Promise<{ hash: string; salt: string }> {
@@ -51,11 +62,11 @@ export async function verifyPassword(
   return btoa(String.fromCharCode(...new Uint8Array(hashBuffer))) === storedHash;
 }
 
-// ─── JWT via HMAC-SHA256 ──────────────────────────────────────────────────────
+// ─── JWT via HMAC-SHA256 (base64url encoded per RFC 7519) ─────────────────────
 
 export async function signJWT(payload: object, secret: string): Promise<string> {
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const body = btoa(JSON.stringify(payload));
+  const header = toBase64Url(btoa(JSON.stringify({ alg: "HS256", typ: "JWT" })));
+  const body = toBase64Url(btoa(JSON.stringify(payload)));
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
@@ -68,7 +79,7 @@ export async function signJWT(payload: object, secret: string): Promise<string> 
     key,
     new TextEncoder().encode(`${header}.${body}`)
   );
-  const sig = btoa(String.fromCharCode(...new Uint8Array(sigBuffer)));
+  const sig = toBase64Url(btoa(String.fromCharCode(...new Uint8Array(sigBuffer))));
   return `${header}.${body}.${sig}`;
 }
 
@@ -90,11 +101,11 @@ export async function verifyJWT<T extends object>(
     const valid = await crypto.subtle.verify(
       "HMAC",
       key,
-      Uint8Array.from(atob(sig), (c) => c.charCodeAt(0)),
+      Uint8Array.from(atob(fromBase64Url(sig)), (c) => c.charCodeAt(0)),
       new TextEncoder().encode(`${header}.${body}`)
     );
     if (!valid) return null;
-    const payload = JSON.parse(atob(body)) as T & { exp?: number };
+    const payload = JSON.parse(atob(fromBase64Url(body))) as T & { exp?: number };
     if (payload.exp && payload.exp < Date.now() / 1000) return null;
     return payload;
   } catch {
@@ -162,10 +173,19 @@ export async function createAppointment(
   return result[0];
 }
 
-export async function getAppointments(db: Db, opts: { limit: number; offset: number }) {
-  const rows = await db
-    .select()
-    .from(schema.appointments)
+export async function getAppointments(
+  db: Db,
+  opts: {
+    limit: number;
+    offset: number;
+    status?: "pending" | "confirmed" | "completed" | "cancelled";
+  }
+) {
+  const query = db.select().from(schema.appointments);
+  const filtered = opts.status
+    ? query.where(eq(schema.appointments.status, opts.status))
+    : query;
+  const rows = await filtered
     .limit(opts.limit)
     .offset(opts.offset)
     .orderBy(schema.appointments.createdAt);

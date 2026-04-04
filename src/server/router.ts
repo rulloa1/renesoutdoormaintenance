@@ -63,7 +63,7 @@ export const appRouter = router({
         );
 
         ctx.setCookie(
-          `${SESSION_COOKIE}=${token}; HttpOnly; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Strict`
+          `${SESSION_COOKIE}=${token}; HttpOnly; Secure; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Strict`
         );
 
         return { success: true };
@@ -75,7 +75,7 @@ export const appRouter = router({
 
     logout: publicProcedure.mutation(({ ctx }) => {
       ctx.setCookie(
-        `${SESSION_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict`
+        `${SESSION_COOKIE}=; HttpOnly; Secure; Path=/; Max-Age=0; SameSite=Strict`
       );
       return { success: true };
     }),
@@ -105,6 +105,9 @@ export const appRouter = router({
         z.object({
           limit: z.number().min(1).max(100).default(50),
           offset: z.number().min(0).default(0),
+          status: z
+            .enum(["pending", "confirmed", "completed", "cancelled"])
+            .optional(),
         })
       )
       .query(async ({ input, ctx }) => {
