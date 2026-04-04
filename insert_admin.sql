@@ -1,2 +1,0 @@
-DELETE FROM admin_users WHERE email = 'renelklever@gmail.com';
-INSERT INTO admin_users (email, passwordHash, passwordSalt) VALUES ('renelklever@gmail.com', 'mMDAMjAqEtyWJYWUL1On+riEktyW2WcTwl5XXzOXqhw=', 'cz5GpByaB9KM1A2gMg7LIQ==');
