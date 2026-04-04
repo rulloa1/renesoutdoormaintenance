@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "pages:dev": "wrangler pages dev dist --d1=DB",
     "pages:deploy": "wrangler pages deploy dist",
+    "deploy": "wrangler pages deploy dist",
     "db:generate": "drizzle-kit generate",
     "db:push": "wrangler d1 execute renes-outdoor-db --remote --file=./drizzle/schema.sql"
   },
