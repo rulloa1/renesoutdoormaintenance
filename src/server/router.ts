@@ -30,6 +30,14 @@ export const appRouter = router({
           });
         }
 
+        // Guard: JWT_SECRET must be configured
+        if (!ctx.jwtSecret) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Server misconfiguration: JWT_SECRET is not set",
+          });
+        }
+
         // Try admin table first, then owner table
         const admin = await verifyAdminPassword(ctx.db, input.email, input.password);
         const role: "admin" | "owner" | null = admin

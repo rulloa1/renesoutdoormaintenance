@@ -9,6 +9,14 @@ interface Env {
 }
 
 export const onRequest: PagesFunction<Env> = async (ctx) => {
+  // Guard: JWT_SECRET must be set as an environment variable in Cloudflare Pages
+  if (!ctx.env.JWT_SECRET) {
+    return new Response(
+      JSON.stringify({ error: "Server misconfiguration: JWT_SECRET is not set" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   const responseHeaders = new Headers();
 
   // Parse session cookie
@@ -20,7 +28,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     ?.slice("renes-session=".length);
 
   let user: Session | null = null;
-  if (token && ctx.env.JWT_SECRET) {
+  if (token) {
     user = await verifyJWT<Session>(token, ctx.env.JWT_SECRET);
   }
 
@@ -33,7 +41,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     createContext: () => ({
       db,
       user,
-      jwtSecret: ctx.env.JWT_SECRET ?? "",
+      jwtSecret: ctx.env.JWT_SECRET,
       setCookie: (cookieStr: string) => {
         responseHeaders.append("Set-Cookie", cookieStr);
       },
