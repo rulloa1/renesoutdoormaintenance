@@ -9,6 +9,10 @@ interface Env {
 }
 
 export const onRequest: PagesFunction<Env> = async (ctx) => {
+  if (!ctx.env.JWT_SECRET) {
+    return new Response("Server misconfiguration: JWT_SECRET is not set.", { status: 500 });
+  }
+
   const responseHeaders = new Headers();
 
   // Parse session cookie
@@ -33,7 +37,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     createContext: () => ({
       db,
       user,
-      jwtSecret: ctx.env.JWT_SECRET ?? "",
+      jwtSecret: ctx.env.JWT_SECRET,
       setCookie: (cookieStr: string) => {
         responseHeaders.append("Set-Cookie", cookieStr);
       },
