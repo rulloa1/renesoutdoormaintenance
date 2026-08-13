@@ -1,0 +1,3 @@
+# Local-only development secret for Cloudflare Pages Functions.
+# Generate a unique high-entropy value; do not reuse it in production.
+JWT_SECRET="replace-with-a-unique-development-secret"

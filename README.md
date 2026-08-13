@@ -77,10 +77,13 @@ npm install
 npm run dev
 ```
 
-Requires a `.dev.vars` file with:
+Copy the safe local template before running Pages Functions locally, then replace the placeholder with a unique development-only secret:
+
+```bash
+cp .dev.vars.example .dev.vars
 ```
-JWT_SECRET=your-local-dev-secret
-```
+
+The `.dev.vars` file is ignored by Git. Do not commit it or reuse its value in Cloudflare Pages production settings.
 
 ## Database Migrations
 
